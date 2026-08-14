@@ -1,4 +1,6 @@
 import os
+import threading
+from flask import Flask
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -8,6 +10,21 @@ import google.generativeai as genai
 import anthropic
 
 load_dotenv()
+
+# Render 웹 포트 유지용 가짜 웹서버
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Bot is alive!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = threading.Thread(target=run_web)
+    t.start()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -40,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini (수정: gemini-1.5-flash-latest)
+# 2. Gemini
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -55,7 +72,7 @@ async def ask_gemini(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Gemini 오류]** {e}")
 
-# 3. Claude (수정: claude-3-haiku-20240307)
+# 3. Claude
 @bot.command(name="claude")
 async def ask_claude(ctx, *, prompt: str):
     if not CLAUDE_API_KEY:
@@ -73,7 +90,7 @@ async def ask_claude(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Claude 오류]** {e}")
 
-# 4. Grok (수정: grok-2-latest)
+# 4. Grok
 @bot.command(name="grok")
 async def ask_grok(ctx, *, prompt: str):
     if not GROK_API_KEY:
@@ -90,4 +107,6 @@ async def ask_grok(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Grok 오류]** {e}")
 
-bot.run(DISCORD_TOKEN)
+if __name__ == "__main__":
+    keep_alive() # 웹서버 가동 (Render 타임아웃 방지)
+    bot.run(DISCORD_TOKEN)
