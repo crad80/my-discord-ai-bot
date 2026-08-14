@@ -1,5 +1,5 @@
 discord.py
 openai
-google-genai
+google-generativeai
 anthropic
 python-dotenv
