@@ -57,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini (가장 호환성 높고 기본이 되는 1.5 Pro 적용)
+# 2. Gemini
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -66,7 +66,7 @@ async def ask_gemini(ctx, *, prompt: str):
     async with ctx.typing():
         try:
             genai.configure(api_key=GEMINI_API_KEY)
-            model = genai.GenerativeModel("gemini-1.5-pro")
+            model = genai.GenerativeModel("gemini-pro") # 가장 구형이자 기본 모델명
             response = model.generate_content(prompt)
             await ctx.send(f"**[Gemini]**\n{response.text}")
         except Exception as e:
