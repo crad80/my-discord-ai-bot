@@ -11,12 +11,12 @@ import anthropic
 
 load_dotenv()
 
-# Render 포트 유지용 가짜 웹서버
+# Render 포트 유지용 서버
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is alive!"
+    return "Bot is running!"
 
 def run_web():
     port = int(os.environ.get("PORT", 8080))
@@ -57,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini (검증된 표준 모델: gemini-1.5-flash)
+# 2. Gemini (v1beta 명시적 패치)
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -66,13 +66,14 @@ async def ask_gemini(ctx, *, prompt: str):
     async with ctx.typing():
         try:
             genai.configure(api_key=GEMINI_API_KEY)
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            # 모델 인스턴스 생성 시 최신 flash 명칭 지정
+            model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(prompt)
             await ctx.send(f"**[Gemini]**\n{response.text}")
         except Exception as e:
             await ctx.send(f"**[Gemini 오류]** {e}")
 
-# 3. Claude (최신 표준 모델: claude-3-5-sonnet-20241022)
+# 3. Claude (기본 호환용 하이쿠 모델)
 @bot.command(name="claude")
 async def ask_claude(ctx, *, prompt: str):
     if not CLAUDE_API_KEY:
@@ -82,7 +83,7 @@ async def ask_claude(ctx, *, prompt: str):
         try:
             client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
             response = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-3-haiku-20240307",
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -90,17 +91,17 @@ async def ask_claude(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Claude 오류]** {e}")
 
-# 4. Grok (표준 모델: grok-2-1212)
+# 4. Grok (grok-2 표준명)
 @bot.command(name="grok")
 async def ask_grok(ctx, *, prompt: str):
     if not GROK_API_KEY:
-        await ctx.send("Grok API 키가 설정되지 않았습니다. (Render Environment에서 GROK_API_KEY를 확인하세요)")
+        await ctx.send("Grok API 키가 설정되지 않았습니다.")
         return
     async with ctx.typing():
         try:
             client = OpenAI(api_key=GROK_API_KEY, base_url="https://api.x.ai/v1")
             response = client.chat.completions.create(
-                model="grok-2-1212",
+                model="grok-2",
                 messages=[{"role": "user", "content": prompt}]
             )
             await ctx.send(f"**[Grok]**\n{response.choices[0].message.content}")
