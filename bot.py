@@ -11,12 +11,12 @@ import anthropic
 
 load_dotenv()
 
-# Render 포트 유지용 서버
+# Render 웹서버 포트 유지 (타임아웃 방지)
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is running!"
+    return "Bot is active!"
 
 def run_web():
     port = int(os.environ.get("PORT", 8080))
@@ -57,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini (v1beta 명시적 패치)
+# 2. Gemini (가장 호환성 높고 기본이 되는 1.5 Pro 적용)
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -66,14 +66,13 @@ async def ask_gemini(ctx, *, prompt: str):
     async with ctx.typing():
         try:
             genai.configure(api_key=GEMINI_API_KEY)
-            # 모델 인스턴스 생성 시 최신 flash 명칭 지정
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel("gemini-1.5-pro")
             response = model.generate_content(prompt)
             await ctx.send(f"**[Gemini]**\n{response.text}")
         except Exception as e:
             await ctx.send(f"**[Gemini 오류]** {e}")
 
-# 3. Claude (기본 호환용 하이쿠 모델)
+# 3. Claude (모든 계정 기본 제공 3.5 Sonnet 적용)
 @bot.command(name="claude")
 async def ask_claude(ctx, *, prompt: str):
     if not CLAUDE_API_KEY:
@@ -83,7 +82,7 @@ async def ask_claude(ctx, *, prompt: str):
         try:
             client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
             response = client.messages.create(
-                model="claude-3-haiku-20240307",
+                model="claude-3-5-sonnet-latest",
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -91,7 +90,7 @@ async def ask_claude(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Claude 오류]** {e}")
 
-# 4. Grok (grok-2 표준명)
+# 4. Grok (가장 최신 표준 grok-2 적용)
 @bot.command(name="grok")
 async def ask_grok(ctx, *, prompt: str):
     if not GROK_API_KEY:
