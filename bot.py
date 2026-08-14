@@ -6,12 +6,12 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from openai import OpenAI
-import google.generativeai as genai
+from google import genai  # Google 공식 최신 SDK
 import anthropic
 
 load_dotenv()
 
-# Render 웹서버 포트 유지 (타임아웃 방지)
+# Render 포트 타임아웃 방지용 웹서버
 app = Flask('')
 
 @app.route('/')
@@ -57,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini
+# 2. Gemini (최신 SDK 호출 방식)
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -65,14 +65,16 @@ async def ask_gemini(ctx, *, prompt: str):
         return
     async with ctx.typing():
         try:
-            genai.configure(api_key=GEMINI_API_KEY)
-            model = genai.GenerativeModel("gemini-pro") # 가장 구형이자 기본 모델명
-            response = model.generate_content(prompt)
+            client = genai.Client(api_key=GEMINI_API_KEY)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
             await ctx.send(f"**[Gemini]**\n{response.text}")
         except Exception as e:
             await ctx.send(f"**[Gemini 오류]** {e}")
 
-# 3. Claude (모든 계정 기본 제공 3.5 Sonnet 적용)
+# 3. Claude (최신 표준 모델명)
 @bot.command(name="claude")
 async def ask_claude(ctx, *, prompt: str):
     if not CLAUDE_API_KEY:
@@ -90,7 +92,7 @@ async def ask_claude(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Claude 오류]** {e}")
 
-# 4. Grok (가장 최신 표준 grok-2 적용)
+# 4. Grok
 @bot.command(name="grok")
 async def ask_grok(ctx, *, prompt: str):
     if not GROK_API_KEY:
@@ -100,7 +102,7 @@ async def ask_grok(ctx, *, prompt: str):
         try:
             client = OpenAI(api_key=GROK_API_KEY, base_url="https://api.x.ai/v1")
             response = client.chat.completions.create(
-                model="grok-2",
+                model="grok-2-latest",
                 messages=[{"role": "user", "content": prompt}]
             )
             await ctx.send(f"**[Grok]**\n{response.choices[0].message.content}")
