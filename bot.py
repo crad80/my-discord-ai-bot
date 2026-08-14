@@ -11,7 +11,7 @@ import anthropic
 
 load_dotenv()
 
-# Render 타임아웃 방지용 웹서버
+# Render 타임아웃 방지용 웹서버 (포트 유지)
 app = Flask('')
 
 @app.route('/')
@@ -57,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini (최신 지원 모델: gemini-2.0-flash)
+# 2. Gemini (gemini-2.0-flash 정식 모델)
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -72,7 +72,7 @@ async def ask_gemini(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Gemini 오류]** {e}")
 
-# 3. Claude (가장 안정적인 3.5 Sonnet 정식 규격)
+# 3. Claude (claude-3-5-sonnet-20240620 정식 모델)
 @bot.command(name="claude")
 async def ask_claude(ctx, *, prompt: str):
     if not CLAUDE_API_KEY:
@@ -90,7 +90,7 @@ async def ask_claude(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Claude 오류]** {e}")
 
-# 4. Grok
+# 4. Grok (grok-2 정식 모델)
 @bot.command(name="grok")
 async def ask_grok(ctx, *, prompt: str):
     if not GROK_API_KEY:
@@ -110,3 +110,5 @@ async def ask_grok(ctx, *, prompt: str):
 if __name__ == "__main__":
     keep_alive()
     bot.run(DISCORD_TOKEN)
+
+# test
