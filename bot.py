@@ -11,7 +11,7 @@ import anthropic
 
 load_dotenv()
 
-# Render 웹 포트 유지용 가짜 웹서버
+# Render 포트 유지용 가짜 웹서버
 app = Flask('')
 
 @app.route('/')
@@ -57,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini
+# 2. Gemini (검증된 표준 모델: gemini-1.5-flash)
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -66,13 +66,13 @@ async def ask_gemini(ctx, *, prompt: str):
     async with ctx.typing():
         try:
             genai.configure(api_key=GEMINI_API_KEY)
-            model = genai.GenerativeModel("gemini-1.5-flash-latest")
+            model = genai.GenerativeModel("gemini-1.5-flash")
             response = model.generate_content(prompt)
             await ctx.send(f"**[Gemini]**\n{response.text}")
         except Exception as e:
             await ctx.send(f"**[Gemini 오류]** {e}")
 
-# 3. Claude
+# 3. Claude (최신 표준 모델: claude-3-5-sonnet-20241022)
 @bot.command(name="claude")
 async def ask_claude(ctx, *, prompt: str):
     if not CLAUDE_API_KEY:
@@ -82,7 +82,7 @@ async def ask_claude(ctx, *, prompt: str):
         try:
             client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
             response = client.messages.create(
-                model="claude-3-haiku-20240307",
+                model="claude-3-5-sonnet-20241022",
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -90,17 +90,17 @@ async def ask_claude(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[Claude 오류]** {e}")
 
-# 4. Grok
+# 4. Grok (표준 모델: grok-2-1212)
 @bot.command(name="grok")
 async def ask_grok(ctx, *, prompt: str):
     if not GROK_API_KEY:
-        await ctx.send("Grok API 키가 설정되지 않았습니다.")
+        await ctx.send("Grok API 키가 설정되지 않았습니다. (Render Environment에서 GROK_API_KEY를 확인하세요)")
         return
     async with ctx.typing():
         try:
             client = OpenAI(api_key=GROK_API_KEY, base_url="https://api.x.ai/v1")
             response = client.chat.completions.create(
-                model="grok-2-latest",
+                model="grok-2-1212",
                 messages=[{"role": "user", "content": prompt}]
             )
             await ctx.send(f"**[Grok]**\n{response.choices[0].message.content}")
@@ -108,5 +108,5 @@ async def ask_grok(ctx, *, prompt: str):
             await ctx.send(f"**[Grok 오류]** {e}")
 
 if __name__ == "__main__":
-    keep_alive() # 웹서버 가동 (Render 타임아웃 방지)
+    keep_alive()
     bot.run(DISCORD_TOKEN)
