@@ -6,17 +6,17 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from openai import OpenAI
-from google import genai  # Google 공식 최신 SDK
+import google.generativeai as genai
 import anthropic
 
 load_dotenv()
 
-# Render 포트 타임아웃 방지용 웹서버
+# Render 타임아웃 방지용 웹서버
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot is active!"
+    return "Bot is alive!"
 
 def run_web():
     port = int(os.environ.get("PORT", 8080))
@@ -57,7 +57,7 @@ async def ask_gpt(ctx, *, prompt: str):
         except Exception as e:
             await ctx.send(f"**[ChatGPT 오류]** {e}")
 
-# 2. Gemini (최신 SDK 호출 방식)
+# 2. Gemini (최신 지원 모델: gemini-2.0-flash)
 @bot.command(name="gemini")
 async def ask_gemini(ctx, *, prompt: str):
     if not GEMINI_API_KEY:
@@ -65,16 +65,14 @@ async def ask_gemini(ctx, *, prompt: str):
         return
     async with ctx.typing():
         try:
-            client = genai.Client(api_key=GEMINI_API_KEY)
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-            )
+            genai.configure(api_key=GEMINI_API_KEY)
+            model = genai.GenerativeModel("gemini-2.0-flash")
+            response = model.generate_content(prompt)
             await ctx.send(f"**[Gemini]**\n{response.text}")
         except Exception as e:
             await ctx.send(f"**[Gemini 오류]** {e}")
 
-# 3. Claude (최신 표준 모델명)
+# 3. Claude (가장 안정적인 3.5 Sonnet 정식 규격)
 @bot.command(name="claude")
 async def ask_claude(ctx, *, prompt: str):
     if not CLAUDE_API_KEY:
@@ -84,7 +82,7 @@ async def ask_claude(ctx, *, prompt: str):
         try:
             client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
             response = client.messages.create(
-                model="claude-3-5-sonnet-latest",
+                model="claude-3-5-sonnet-20240620",
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -102,7 +100,7 @@ async def ask_grok(ctx, *, prompt: str):
         try:
             client = OpenAI(api_key=GROK_API_KEY, base_url="https://api.x.ai/v1")
             response = client.chat.completions.create(
-                model="grok-2-latest",
+                model="grok-2",
                 messages=[{"role": "user", "content": prompt}]
             )
             await ctx.send(f"**[Grok]**\n{response.choices[0].message.content}")
