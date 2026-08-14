@@ -1,6 +1,6 @@
 discord.py
 openai
-google-generativeai
+google-genai
 anthropic
 python-dotenv
 flask
